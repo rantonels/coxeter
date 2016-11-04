@@ -1,12 +1,11 @@
 import tqdm
 from PIL import Image
-from math import sin,cos,tan,sqrt,floor
+from math import sin, cos, tan, sqrt, floor, pi
 from cmath import exp
 
 import random
 import coxeter
-
-PI = 3.14159265359
+import coxeter.exceptions
 
 
 # COLOURS
@@ -21,9 +20,11 @@ def HTMLColorToRGB(colorstring):
     r, g, b = [int(n, 16) for n in (r, g, b)]
     return (r, g, b, 255)
 
+
 # geom functions
 def abs2(w):
     return w.real**2 + w.imag**2
+
 
 #bilinear sampling
 def lerp(a, b, coord):
@@ -31,6 +32,7 @@ def lerp(a, b, coord):
         return tuple([lerp(c, d, coord) for c,d in zip(a,b)])
     ratio = coord - floor(coord)
     return int(round(a * (1.0-ratio) + b * ratio))
+
 
 def bilinear(im, x, y):
     x1, y1 = int(floor(x)), int(floor(y))
@@ -60,7 +62,7 @@ def main(
     if q < 0:#infinity
         q = 2**10
 
-    if (p-2)*(q-2) <= 4:
+    if (p - 2) * (q - 2) <= 4:
         raise coxeter.exceptions.NotHyperbolicError(
             "(p - 2) * (q - 2) < 4: tessellation is not hyperbolic")
 
@@ -68,14 +70,14 @@ def main(
         raise coxeter.exceptions.AlternatingModeError(
             "alternating mode cannot be used with odd p.")
 
-    size = size_original * oversampling
-    shape = (size, size)
+    oversampled_size = size * oversampling
+    shape = (oversampled_size, oversampled_size)
 
     #Input sector precalc
-    phiangle = PI/2. - (PI/p + PI/q)
+    phiangle = pi / 2 - (pi / p + pi / q)
 
-    d = sqrt((cos(PI/q)**2) / (cos(PI/q)**2 - sin(PI/p)**2))
-    r = sqrt((sin(PI/p)**2) / (cos(PI/q)**2 - sin(PI/p)**2))
+    d = sqrt((cos(pi/q)**2) / (cos(pi/q)**2 - sin(pi/p)**2))
+    r = sqrt((sin(pi/p)**2) / (cos(pi/q)**2 - sin(pi/p)**2))
 
     a = cos(phiangle)*r
     x_input_sector = d-a
@@ -86,8 +88,8 @@ def main(
     out = Image.new("RGB", shape, "white")
     out_pixels = out.load()
 
-    rot2PIp = exp(1j*2*PI/float(p))
-    tanPIp = tan(PI/float(p))
+    rot2pip = exp(1j*2*pi/float(p))
+    tanpip = tan(pi/float(p))
 
     if input_image:
         inimage_pixels = input_image.load()
@@ -106,14 +108,14 @@ def main(
 
 
     if (not alternating):
-        rotator = rot2PIp
-        curtanPIp = tanPIp
+        rotator = rot2pip
+        curtanpip = tanpip
     else:
-        rotator = rot2PIp ** 2
-        # halfrot = exp(1j*2*PI/float(p))
-        # tanPIp = tan(PI/float(p))
-        doubletanPIp = tan(2*PI/float(p))
-        curtanPIp = doubletanPIp
+        rotator = rot2pip ** 2
+        # halfrot = exp(1j*2*pi/float(p))
+        # tanpip = tan(pi/float(p))
+        doubletanpip = tan(2*pi/float(p))
+        curtanpip = doubletanpip
 
 
 
@@ -130,15 +132,15 @@ def main(
 
     def in_fund(z):
         if alternating:
-            rot_centre = rot2PIp * centre
+            rot_centre = rot2pip * centre
             return (
                 (z.imag >=0) and
-                (z.imag < doubletanPIp * z.real) and
-                ((abs2(z-centre) > r2) and ( abs2(z - centre*rot2PIp)> r2)))
+                (z.imag < doubletanpip * z.real) and
+                ((abs2(z-centre) > r2) and ( abs2(z - centre*rot2pip)> r2)))
         else:
             return (
                 (z.imag >= 0) and
-                (z.imag < tanPIp * z.real) and
+                (z.imag < tanpip * z.real) and
                 (abs2(z - centre) > r2 ))
 
     # template
@@ -182,7 +184,7 @@ def main(
             for it in range(max_iterations): 
 
                 # rotate z into fundamental wedge
-                while((abs(z.imag) > curtanPIp * z.real)):
+                while((abs(z.imag) > curtanpip * z.real)):
                     if (z.imag < 0):
                         z *= rotator
                     else:
@@ -201,7 +203,7 @@ def main(
 
 
                 # invert
-                local_centre = centre if ((not alternating) or (abs(z.imag) < tanPIp * z.real)) else rot_centre
+                local_centre = centre if ((not alternating) or (abs(z.imag) < tanpip * z.real)) else rot_centre
 
                 w = z - local_centre
                 w = w * r2 / abs2(w)
@@ -247,6 +249,6 @@ def main(
             out_pixels[x,y] = c
 
     if (oversampling > 1):
-        out = out.resize((size_original,size_original), Image.LANCZOS)
+        out = out.resize((size, size), Image.LANCZOS)
 
     return out
