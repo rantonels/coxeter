@@ -122,6 +122,7 @@ def main(
     centre = complex(d,0) # center of inversion circle
     r2 = r*r
 
+    rot_centre = rot2pip * centre
     if truncate_uniform:
         centre_truncation_uniform = exp(1j*PI/float(p)) * centre
 
@@ -132,7 +133,6 @@ def main(
 
     def in_fund(z):
         if alternating:
-            rot_centre = rot2pip * centre
             return (
                 (z.imag >=0) and
                 (z.imag < doubletanpip * z.real) and
