@@ -5,7 +5,7 @@ from cmath import exp
 
 import random
 import coxeter
-import coxeter.exceptions
+#import coxeter.exceptions
 
 
 # COLOURS
@@ -70,7 +70,7 @@ def main(
         raise coxeter.exceptions.AlternatingModeError(
             "alternating mode cannot be used with odd p.")
 
-    oversampled_size = size * oversampling
+    oversampled_size = size_original * oversampling
     shape = (oversampled_size, oversampled_size)
 
     #Input sector precalc
@@ -249,6 +249,6 @@ def main(
             out_pixels[x,y] = c
 
     if (oversampling > 1):
-        out = out.resize((size, size), Image.LANCZOS)
+        out = out.resize((size_original, size_original), Image.LANCZOS)
 
     return out
