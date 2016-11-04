@@ -280,8 +280,8 @@ for x in range(SZ[0]):
                 yy = int(z.imag/input_sector*inH)
                 try:
                     c = bilinear(inimage_pixels,xx,yy)
-                except IndexError:
-                    c = (0,255,255,255)
+                except IndexError: # out of bounds
+                    c = average_colour# (0,255,255,255)
             else:
                 # c = (int(z.real*255),int(z.imag*255),0,255)
                 c = red if (parity % 2 == 0) else black
