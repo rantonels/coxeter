@@ -59,7 +59,7 @@ def main(
     if q < 0:#infinity
         q = 2**10
 
-    if (p-2)*(q-2) <= 4:
+    if (p - 2) * (q - 2) <= 4:
         raise coxeter.exceptions.NotHyperbolicError(
             "(p - 2) * (q - 2) < 4: tessellation is not hyperbolic")
 
@@ -67,11 +67,12 @@ def main(
         raise coxeter.exceptions.AlternatingModeError(
             "alternating mode cannot be used with odd p.")
 
-    size = size * oversampling
-    shape = (size, size)
+
+    oversampled_size = size * oversampling
+    shape = (oversampled_size, oversampled_size)
 
     #Input sector precalc
-    phiangle = pi/2. - (pi/p + pi/q)
+    phiangle = pi / 2 - (pi / p + pi / q)
 
     d = sqrt((cos(pi/q)**2) / (cos(pi/q)**2 - sin(pi/p)**2))
     r = sqrt((sin(pi/p)**2) / (cos(pi/q)**2 - sin(pi/p)**2))
@@ -225,6 +226,6 @@ def main(
             out_pixels[x,y] = c
 
     if (oversampling > 1):
-        out = out.resize(shape, Image.LANCZOS)
+        out = out.resize((size, size), Image.LANCZOS)
 
     return out
