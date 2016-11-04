@@ -123,8 +123,10 @@ def main(
     r2 = r*r
 
     rot_centre = rot2pip * centre
-    if truncate_uniform:
+    if truncate_uniform or truncate_complete:
         centre_truncation_uniform = exp(1j*pi/float(p)) * centre
+    if truncate_complete:
+        rprime2 = abs2( centre_truncation_uniform - (d-r) )
 
 
     red = HTMLColorToRGB("#FF3333")
@@ -168,6 +170,9 @@ def main(
                 X = (2*float(x)/shape[0]-1. ) 
                 Y = (2*float(y)/shape[1]-1. )
                 z = translate + complex(X,Y) * zoom
+
+
+            z += 0.0001*(random.random()+1j) # <- fix boundary errors
 
             # exclude if outside the disk
             if (abs2(z)  > 1):
@@ -236,6 +241,8 @@ def main(
                     # c = (int(z.real*255),int(z.imag*255),0,255)
                     c = red if (parity % 2 == 0) else black
                     if truncate_uniform and (abs2(z-centre_truncation_uniform) < r2):
+                        c = yellow
+                    if truncate_complete and (abs2(z-centre_truncation_uniform) < rprime2):
                         c = yellow
 
             else:

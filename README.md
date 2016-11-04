@@ -37,7 +37,7 @@ You can also render the image in the half-plane model instead of the Poincaré d
 
 ### Truncation
 
-It's possible to obtain a uniform truncation of a tiling by adding `--truncate-uniform`.
+It's possible to obtain a uniform or complete truncation of a tiling by adding `--truncate-uniform` or `--truncate-complete`.
 
 ### Using images as input
 
