@@ -12,6 +12,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        coxeter=bin.save:main
+        coxeter=coxeter.scripts.save:main
     ''',
 )
