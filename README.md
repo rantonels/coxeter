@@ -33,11 +33,23 @@ coxeter -p 6 -q 4 -s 500 --multisampling=2 hexagons.png
 
 renders the image at 1000x1000 and then downscales it to 500x500 with Lanczos sampling.
 
-You can also render the image in the half-plane model instead of the Poincaré disk by adding `-H`.
+You can also render the image in the half-plane model instead of the Poincaré disk by adding `--half-plane`.
+
+### Truncation
+
+It's possible to obtain a uniform truncation of a tiling by adding `--truncate-uniform`.
 
 ### Using images as input
 
-To use an image as input for the tessellation, add `-i input.png`. Note the resolution of the input image has very little to no effect on the render time, so feel free to go big and detailed. To know how to set up the input image properly, run the program first with the intended parameters and `--template`. This will produce a `template.png` file, of the size specified by `-s`, with the fundamental region highlighted. Make sure your input image is square and aligned with the fundamental domain in the template.
+To use an image as input for the tessellation, add `-i input.png`. Note the resolution of the input image has very little to no effect on the render time, so feel free to go big and detailed. 
+
+To know how to set up the input image properly so that it is sampled correctly, run the program first with the intended parameters and `--template`. This will produce a template image of the size specified by `-s` with the fundamental region highlighted. Example
+
+```
+coxeter -p 7 -q 3 -s 500 --template template.png
+```
+
+Multisampling is ignored when templating. Make sure your input image is square and aligned with the fundamental domain in the template. The input image does not need to be the same size of the template; the sampling will be rescaled according to its size.
 
 Note that when using input images, pixels which have not converged will be set to the average colour of the source image instead of blue. This might sometimes be preferable to the high-frequency noise in the outermost region of the disk, so it is possible that lower values of `--max_iterations` might yield slightly better results.
 

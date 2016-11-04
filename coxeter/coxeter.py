@@ -116,11 +116,17 @@ def main(
         curtanPIp = doubletanPIp
 
 
+
     centre = complex(d,0) # center of inversion circle
     r2 = r*r
 
+    if truncate_uniform:
+        centre_truncation_uniform = exp(1j*PI/float(p)) * centre
+
+
     red = HTMLColorToRGB("#FF3333")
     black = HTMLColorToRGB("#000000")
+    yellow = (255,255,0,255)
 
     def in_fund(z):
         if alternating:
@@ -223,6 +229,9 @@ def main(
                 else:
                     # c = (int(z.real*255),int(z.imag*255),0,255)
                     c = red if (parity % 2 == 0) else black
+                    if truncate_uniform and (abs2(z-centre_truncation_uniform) < r2):
+                        c = yellow
+
             else:
                 c = (0,255,0,255) # error?
 
