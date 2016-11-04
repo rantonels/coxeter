@@ -124,7 +124,7 @@ def main(
 
     rot_centre = rot2pip * centre
     if truncate_uniform:
-        centre_truncation_uniform = exp(1j*PI/float(p)) * centre
+        centre_truncation_uniform = exp(1j*pi/float(p)) * centre
 
 
     red = HTMLColorToRGB("#FF3333")
@@ -184,11 +184,15 @@ def main(
             for it in range(max_iterations): 
 
                 # rotate z into fundamental wedge
+                emergency = 0
                 while((abs(z.imag) > curtanpip * z.real)):
                     if (z.imag < 0):
                         z *= rotator
                     else:
                         z /= rotator
+                    emergency += 1
+                    if emergency > 500:
+                        break
 
                 if in_fund(z):
                     break
