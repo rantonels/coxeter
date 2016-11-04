@@ -204,7 +204,7 @@ def main(
                     try:
                         c = bilinear(inimage_pixels,xx,yy)
                     except IndexError:
-                        c = (0,255,255,255)
+                        c = average_colour #(0,255,255,255)
                 else:
                     # c = (int(z.real*255),int(z.imag*255),0,255)
                     c = red if (parity % 2 == 0) else black
