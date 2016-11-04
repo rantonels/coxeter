@@ -1,6 +1,9 @@
+# Images
 *.jpg
 *.png
 *.gif
+# vim
+*.swp
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
