@@ -16,6 +16,9 @@ from PIL import Image
 @click.option("-t", "--translate", type=complex, default=0 + 0j)
 @click.option("-a", "--alternating", is_flag=True)
 @click.option("--oversampling", type=int, default=1)
+@click.option("--truncate_uniform",is_flag=True)
+@click.option("--truncate_complete",is_flag=True)
+@click.option("--template",is_flag=True)
 @click.argument("output_file_name", nargs=1, type=click.Path())
 def main(
         p,
@@ -31,6 +34,9 @@ def main(
         alternating,
         oversampling,
         output_file_name,
+        template,
+        truncate_uniform,
+        truncate_complete
         ):
     if input_file_name:
         input_image = Image.open(input_file_name).convert("RGB")
@@ -49,5 +55,8 @@ def main(
         translate,
         alternating,
         oversampling,
+        template,
+        truncate_uniform,
+        truncate_complete
     )
     out.save(output_file_name)

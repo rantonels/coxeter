@@ -43,7 +43,7 @@ def bilinear(im, x, y):
 def main(
         p,
         q,
-        size,
+        size_original,
         input_image,
         half_plane,
         mobius,
@@ -52,7 +52,10 @@ def main(
         zoom,
         translate,
         alternating,
-        oversampling):
+        oversampling,
+        template,
+        truncate_uniform,
+        truncate_complete):
 
     if q < 0:#infinity
         q = 2**10
@@ -65,7 +68,7 @@ def main(
         raise coxeter.exceptions.AlternatingModeError(
             "alternating mode cannot be used with odd p.")
 
-    size = size * oversampling
+    size = size_original * oversampling
     shape = (size, size)
 
     #Input sector precalc
@@ -78,6 +81,7 @@ def main(
     x_input_sector = d-a
     y_input_sector = sin(phiangle)*r
     input_sector = max(x_input_sector, y_input_sector)
+
 
     out = Image.new("RGB", shape, "white")
     out_pixels = out.load()
@@ -130,6 +134,17 @@ def main(
                 (z.imag >= 0) and
                 (z.imag < tanPIp * z.real) and
                 (abs2(z - centre) > r2 ))
+
+    # template
+    if (template):
+        templimg = Image.new("RGB",(size_original,size_original),"white")
+        templimg_pixels = templimg.load()
+        for i in range(size):
+            for j in range(size):
+                z = (i + 1j*j)/(float(size))*input_sector
+                if in_fund(z):
+                    templimg_pixels[i,j] = (0,0,0,255)
+        return templimg
 
 
 
@@ -223,6 +238,6 @@ def main(
             out_pixels[x,y] = c
 
     if (oversampling > 1):
-        out = out.resize(shape, Image.LANCZOS)
+        out = out.resize((size_original,size_original), Image.LANCZOS)
 
     return out
