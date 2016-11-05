@@ -15,7 +15,9 @@ Regular tilings are indexed by naturals (p,q). p is the number of sides of the r
 coxeter -p 6 -q 4 -s 500 hexagons.png
 ```
 
-will generate a 500x500 image of the tiling by right-angled hexagons in the Poincaré disk model, and save it as `hexagons.png`. Actually, this will draw the fundamental domains of the tiling, the Schwarz triangles, coloured according to parity. If you want to actually colour the hexagons, try
+will generate a 500x500 image of the tiling by right-angled hexagons in the Poincaré disk model, and save it as `hexagons.png`. In addition, (p,∞) tilings can also be created, with infinite regular ideal p-gons joining at vertices at infinite, by setting `-q -1`. (∞,q) tilings are not available.
+
+Actually, the will draw the fundamental domains of the tiling, the Schwarz triangles, coloured according to parity. If you want to actually colour the hexagons, try
 
 ```
 python coxeter.py -p 6 -q 4 -s 500 --polygon hexagons.png
