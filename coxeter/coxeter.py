@@ -4,7 +4,7 @@ from math import sin, cos, tan, sqrt, floor, pi
 from cmath import exp
 
 import random
-import coxeter
+#import coxeter
 #import coxeter.exceptions
 
 
@@ -90,6 +90,8 @@ def main(
     # Colours parsing
 
     col_bg, col_primary , col_secundary, col_truncation, col_divergent = map(HTMLColorToRGB, colours)
+
+    # palette = [ (random.randint(0,255),random.randint(0,255),random.randint(0,255),255) for j in range(15) ]
 
     # average input colour
 
@@ -249,6 +251,7 @@ def main(
                 else:
                     # c = (int(z.real*255),int(z.imag*255),0,255)
                     c = col_secundary if (parity % 2 == 0) else col_primary
+                    #c = palette[ parity % 3]
                     if truncate_uniform and (abs2(z-centre_truncation_uniform) < r2):
                         c = col_truncation
                     if truncate_complete and (abs2(z-centre_truncation_uniform) < rprime2):
