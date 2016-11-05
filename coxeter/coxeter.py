@@ -4,8 +4,7 @@ from math import sin, cos, tan, sqrt, floor, pi
 from cmath import exp
 
 import random
-#import coxeter
-#import coxeter.exceptions
+import exceptions
 
 
 # COLOURS
@@ -14,10 +13,14 @@ def HTMLColorToRGB(colorstring):
     colorstring = colorstring.strip()
     if colorstring[0] == '#': colorstring = colorstring[1:]
     if len(colorstring) != 6:
-        raise coxeter.exceptions.ColorFormatError(
+        raise exceptions.ColorFormatError(
             "input #%s is not in #RRGGBB format" %colorstring)
     r, g, b = colorstring[:2], colorstring[2:4], colorstring[4:]
-    r, g, b = [int(n, 16) for n in (r, g, b)]
+    try:
+        r, g, b = [int(n, 16) for n in (r, g, b)]
+    except ValueError:
+        raise exceptions.ColorFormatError(
+                "input #%s is not composed of hex literals" %colorstring)
     return (r, g, b, 255)
 
 
@@ -64,11 +67,11 @@ def main(
         q = 2**10
 
     if (p - 2) * (q - 2) <= 4:
-        raise coxeter.exceptions.NotHyperbolicError(
+        raise exceptions.NotHyperbolicError(
             "(p - 2) * (q - 2) < 4: tessellation is not hyperbolic")
 
     if (alternating and p % 2):
-        raise coxeter.exceptions.AlternatingModeError(
+        raise exceptions.AlternatingModeError(
             "alternating mode cannot be used with odd p.")
 
     oversampled_size = size_original * oversampling
