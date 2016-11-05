@@ -57,7 +57,8 @@ def main(
         oversampling,
         template,
         truncate_uniform,
-        truncate_complete):
+        truncate_complete,
+        colours):
 
     if q < 0:#infinity
         q = 2**10
@@ -74,6 +75,7 @@ def main(
     shape = (oversampled_size, oversampled_size)
 
     #Input sector precalc
+
     phiangle = pi / 2 - (pi / p + pi / q)
 
     d = sqrt((cos(pi/q)**2) / (cos(pi/q)**2 - sin(pi/p)**2))
@@ -85,11 +87,11 @@ def main(
     input_sector = max(x_input_sector, y_input_sector)
 
 
-    out = Image.new("RGB", shape, "white")
-    out_pixels = out.load()
+    # Colours parsing
 
-    rot2pip = exp(1j*2*pi/float(p))
-    tanpip = tan(pi/float(p))
+    col_bg, col_primary , col_secundary, col_truncation, col_divergent = map(HTMLColorToRGB, colours)
+
+    # average input colour
 
     if input_image:
         inimage_pixels = input_image.load()
@@ -107,6 +109,11 @@ def main(
         average_colour = (ar // count, ag // count, ab // count)
 
 
+    # precalc
+
+    rot2pip = exp(1j*2*pi/float(p))
+    tanpip = tan(pi/float(p))
+
     if (not alternating):
         rotator = rot2pip
         curtanpip = tanpip
@@ -118,7 +125,6 @@ def main(
         curtanpip = doubletanpip
 
 
-
     centre = complex(d,0) # center of inversion circle
     r2 = r*r
 
@@ -128,10 +134,7 @@ def main(
     if truncate_complete:
         rprime2 = abs2( centre_truncation_uniform - (d-r) )
 
-
-    red = HTMLColorToRGB("#FF3333")
-    black = HTMLColorToRGB("#000000")
-    yellow = (255,255,0,255)
+    # fundamental region
 
     def in_fund(z):
         if alternating:
@@ -146,6 +149,7 @@ def main(
                 (abs2(z - centre) > r2 ))
 
     # template
+
     if (template):
         templimg = Image.new("RGB",(size_original,size_original),"white")
         templimg_pixels = templimg.load()
@@ -156,7 +160,12 @@ def main(
                     templimg_pixels[i,j] = (0,0,0,255)
         return templimg
 
+    # create main buffer
 
+    out = Image.new("RGB", shape, col_bg)
+    out_pixels = out.load()
+
+    # render loop
 
     for x in tqdm.trange(shape[0]):
         for y in range(shape[1]):
@@ -239,11 +248,11 @@ def main(
                         c = average_colour #(0,255,255,255)
                 else:
                     # c = (int(z.real*255),int(z.imag*255),0,255)
-                    c = red if (parity % 2 == 0) else black
+                    c = col_secundary if (parity % 2 == 0) else col_primary
                     if truncate_uniform and (abs2(z-centre_truncation_uniform) < r2):
-                        c = yellow
+                        c = col_truncation
                     if truncate_complete and (abs2(z-centre_truncation_uniform) < rprime2):
-                        c = yellow
+                        c = col_truncation
 
             else:
                 c = (0,255,0,255) # error?
@@ -252,7 +261,7 @@ def main(
                 if input_image:
                     c = average_colour
                 else:
-                    c = (0,0,255,255) # too many iters
+                    c = col_divergent # too many iters
 
             if (outflag):
                 c = (255,0,255,255) # out of circle

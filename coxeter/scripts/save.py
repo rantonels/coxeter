@@ -19,6 +19,11 @@ from PIL import Image
 @click.option("--truncate_uniform",is_flag=True)
 @click.option("--truncate_complete",is_flag=True)
 @click.option("--template",is_flag=True)
+@click.option("--colour_bg",        default = "#FFFFFF")
+@click.option("--colour_primary",   default = "#000000")
+@click.option("--colour_secundary", default = "#FF3333")
+@click.option("--colour_truncation",default = "#FFCC00")
+@click.option("--colour_divergent", default = "#0000FF")
 @click.argument("output_file_name", nargs=1, type=click.Path())
 def main(
         p,
@@ -36,7 +41,12 @@ def main(
         output_file_name,
         template,
         truncate_uniform,
-        truncate_complete
+        truncate_complete,
+        colour_bg,
+        colour_primary,
+        colour_secundary,
+        colour_truncation,
+        colour_divergent
         ):
     if input_file_name:
         input_image = Image.open(input_file_name).convert("RGB")
@@ -57,6 +67,13 @@ def main(
         oversampling,
         template,
         truncate_uniform,
-        truncate_complete
+        truncate_complete,
+        (
+            colour_bg,
+            colour_primary,
+            colour_secundary,
+            colour_truncation,
+            colour_divergent
+        )
     )
     out.save(output_file_name)
