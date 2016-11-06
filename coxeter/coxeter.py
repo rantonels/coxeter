@@ -26,7 +26,7 @@ def HTMLColorToRGB(colorstring):
 
 # geom functions
 def abs2(w):
-    return w.real**2 + w.imag**2
+    return w.real*w.real + w.imag*w.imag
 
 
 #bilinear sampling
@@ -62,6 +62,7 @@ def main(
         truncate_uniform,
         truncate_complete,
         colours):
+
 
     if q < 0:#infinity
         q = 2**10
@@ -189,7 +190,7 @@ def main(
             z += 0.0001*(random.random()+1j) # <- fix boundary errors
 
             # exclude if outside the disk
-            if (abs2(z)  > 1):
+            if (z.real*z.real + z.imag*z.imag  > 1): # optimization: explicit abs2 instead of calling
                 continue
 
             #mobius
@@ -229,10 +230,12 @@ def main(
                 local_centre = centre if ((not alternating) or (abs(z.imag) < tanpip * z.real)) else rot_centre
 
                 w = z - local_centre
-                w = w * r2 / abs2(w)
+                # w = w * r2 / abs2(w)
+                w = r2 / w.conjugate() # optimization
                 nz = local_centre + w
                 
-                if (abs2(nz) < abs2(z)):
+                #if (abs2(nz) < abs2(z)):
+                if (nz.real*nz.real + nz.imag*nz.imag < z.real*z.real + z.imag*z.imag): # again optimization
                     z = nz    
                     parity += 1
 
