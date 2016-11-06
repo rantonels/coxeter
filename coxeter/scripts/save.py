@@ -77,3 +77,7 @@ def main(
         )
     )
     out.save(output_file_name)
+
+
+if __name__ == "__main__":
+    main()
