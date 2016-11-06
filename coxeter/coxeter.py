@@ -159,9 +159,9 @@ def main(
     if (template):
         templimg = Image.new("RGB",(size_original,size_original),"white")
         templimg_pixels = templimg.load()
-        for i in range(size):
-            for j in range(size):
-                z = (i + 1j*j)/(float(size))*input_sector
+        for i in range(size_original):
+            for j in range(size_original):
+                z = (i + 1j*j)/(float(size_original))*input_sector
                 if in_fund(z):
                     templimg_pixels[i,j] = (0,0,0,255)
         return templimg
