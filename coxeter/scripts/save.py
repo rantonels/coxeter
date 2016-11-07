@@ -14,6 +14,7 @@ from PIL import Image
 @click.option("--max_iterations", type=int, default=14)
 @click.option("-z", "--zoom", type=float, default=1.01)
 @click.option("-t", "--translate", type=complex, default=0 + 0j)
+@click.option("-f", "--flip", is_flag=True)
 @click.option("-a", "--alternating", is_flag=True)
 @click.option("--oversampling", type=int, default=1)
 @click.option("--truncate_uniform",is_flag=True)
@@ -36,6 +37,7 @@ def main(
         max_iterations,
         zoom,
         translate,
+        flip,
         alternating,
         oversampling,
         output_file_name,
@@ -62,13 +64,14 @@ def main(
         polygon,
         max_iterations,
         zoom,
-        translate,
-        alternating,
-        oversampling,
-        template,
-        truncate_uniform,
-        truncate_complete,
-        (
+        translate = translate,
+        flip = flip,
+        alternating = alternating,
+        oversampling = oversampling,
+        template = template,
+        truncate_uniform = truncate_uniform,
+        truncate_complete = truncate_complete,
+        colours = (
             colour_bg,
             colour_primary,
             colour_secundary,

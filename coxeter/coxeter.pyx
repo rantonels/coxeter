@@ -35,6 +35,13 @@ cdef extern from "complex.h":
 cdef float abs2(complex w):
     return creal(w)*creal(w) + cimag(w)*cimag(w)
 
+cdef complex mobius_translation (complex w,complex a):
+    return (w+a)/(1+w*a)
+    
+cdef float signum(float x):
+    return (x>0) - (x<0)
+cdef float rabs (float x):
+    return x * signum(x)
 
 
 #bilinear sampling
@@ -57,17 +64,17 @@ def bilinear(im, x, y):
 
 cdef complex rot2pip
 cdef float tanpip
-cdef complex centre,rotator
+cdef complex centre,rotator, pivot_vertex, vertex_rotator
 cdef doubletanpip,curtanpip
-cdef float r2
+cdef float r2,r,d
 
-cdef bint alternating
+cdef bint do_alternating
 
 # fundamental region
 
 cdef bint in_fund(complex zz):
-    global alternating, doubletanpip, tanpip, rot2pip, r2, centre
-    if alternating:
+    global do_alternating, doubletanpip, tanpip, rot2pip, r2, centre
+    if do_alternating:
         return (
             (cimag(zz) >=0) and
             (cimag(zz) < doubletanpip * creal(zz)) and
@@ -77,6 +84,17 @@ cdef bint in_fund(complex zz):
             (zz.imag >= 0) and
             (zz.imag < tanpip * zz.real) and
             (abs2(zz - centre) > r2 ))
+
+# flipper
+
+cdef complex cI = 1j
+
+
+
+cdef rotate_about_apotheme(complex zz,complex pivot):
+    global vertex_rotator
+    return mobius_translation( vertex_rotator *  mobius_translation(zz,-pivot)  , pivot)
+
 
 
 def main(
@@ -89,14 +107,18 @@ def main(
         polygon,
         max_iterations,
         zoom,
-        translate,
-        alternating,
-        oversampling,
-        template,
-        truncate_uniform,
-        truncate_complete,
-        colours):
-    global alternating, doubletanpip, tanpip, rot2pip, r2, centre
+        translate               = 0,
+        flip                    = False,
+        alternating             = False,
+        oversampling            = None,
+        template                = False,
+        truncate_uniform        = False,
+        truncate_complete       = False,
+        colours                 = []):
+    global do_alternating, doubletanpip, tanpip, rot2pip, r2, centre, r, d
+
+    cdef bint do_flip = flip
+    do_alternating = alternating
 
     if q < 0:#infinity
         q = 2**10
@@ -105,7 +127,7 @@ def main(
         raise exceptions.NotHyperbolicError(
             "(p - 2) * (q - 2) < 4: tessellation is not hyperbolic")
 
-    if (alternating and p % 2):
+    if (do_alternating and p % 2):
         raise exceptions.AlternatingModeError(
             "alternating mode cannot be used with odd p.")
 
@@ -118,6 +140,12 @@ def main(
 
     d = sqrt((cos(pi/q)**2) / (cos(pi/q)**2 - sin(pi/p)**2))
     r = sqrt((sin(pi/p)**2) / (cos(pi/q)**2 - sin(pi/p)**2))
+
+    R = sqrt(r*r + d*d - 2*r*d*cos(phiangle)) # circumscribed circle radius
+    centers_distance = 2 * (d-r) / (1+(d-r)**2) # distance between centres of adjacent polygons
+
+    print centers_distance, d-r, mobius_translation(d-r,d-r)
+    print rabs(1), rabs(-1)
 
     a = cos(phiangle)*r
     x_input_sector = d-a
@@ -151,10 +179,11 @@ def main(
 
     # precalc
     rot2pip = exp(1j*2*pi/float(p))
+    rotpip = exp(1j*pi/float(p))
     tanpip = tan(pi/float(p))
 
 
-    if (not alternating):
+    if (not do_alternating):
         rotator = rot2pip
         curtanpip = tanpip
     else:
@@ -167,6 +196,9 @@ def main(
 
     centre = complex(d,0) # center of inversion circle
     r2 = r*r
+
+    pivot_vertex = exp(1j * pi/float(p)) * R # pivot vertex for rotation.
+    vertex_rotator = exp(-2j * pi/float(q))
 
     rot_centre = rot2pip * centre
     if truncate_uniform or truncate_complete:
@@ -198,7 +230,7 @@ def main(
     cdef int COLUMNS = shape[0]
     cdef int LINES = shape[1]
     cdef int xl,yl
-    cdef complex z
+    cdef complex z,nz
 
     cdef int max_iterations_int = max_iterations
     cdef int it
@@ -236,12 +268,16 @@ def main(
             outflag = False # detect out of disk
             parity = 0      # count transformation parity
 
+            if abs2( z - pivot_vertex ) < 0.001:
+                    outflag = True
+                    continue
 
             for it in range(max_iterations_int): 
 
+                
                 # rotate z into fundamental wedge
                 emergency = 0
-                while((abs(z.imag) > curtanpip * z.real)):
+                while((rabs(z.imag) > curtanpip * z.real)):
                     if (z.imag < 0):
                         z *= rotator
                     else:
@@ -253,26 +289,61 @@ def main(
                 if in_fund(z):
                     break
 
-                # flip
-                z = conj(z)
-                if (not polygon):
-                    parity += 1
-    
-                if in_fund(z):
-                    break
-
-
-                # invert
-                local_centre = centre if ((not alternating) or (abs(z.imag) < tanpip * z.real)) else rot_centre
-
-                w = z - local_centre
-                # w = w * r2 / abs2(w)
-                w = r2 / conj(w) # optimization
-                nz = local_centre + w
                 
-                if (abs2(nz) < abs2(z)):
-                    z = nz    
+                if do_flip:
+                    # rotate about apotheme
+
+                    #nz = rotate_about_apotheme(z,pivot_vertex)
+                    #if abs2(nz) < abs2(z):
+                    #    z = nz
+                    #    parity += 1
+
+                    #nz = rotate_about_apotheme(z,conj(pivot_vertex))
+                    #if abs2(nz) < abs2(z):
+                    #    z = nz
+                    #    parity += 1
+
+                    # translate back
+
+                    if(cimag(z) <= 0):
+                        z =  z*rot2pip
+                        parity += 1
+
+                    if in_fund(z):
+                        break
+
+                    z = mobius_translation(z, - centers_distance)
+                    #if abs2(nz) < abs2(z):
+                    #    z = nz
+
+
+                    #if (abs2(nz) < abs2(z)):
+                    #    z = nz
                     parity += 1
+
+                else:
+                    # flip
+                    z = conj(z)
+                    if (not polygon):
+                        parity += 1
+        
+                    if in_fund(z):
+                        break
+
+                    # bring closer
+
+                    # invert
+
+                    local_centre = centre if ((not do_alternating) or (rabs(z.imag) < tanpip * z.real)) else rot_centre
+
+                    w = z - local_centre
+                    # w = w * r2 / abs2(w)
+                    w = r2 / conj(w) # optimization
+                    nz = local_centre + w
+                    
+                    if (abs2(nz) < abs2(z)):
+                        z = nz    
+                        parity += 1
 
                 if in_fund(z):
                     break
