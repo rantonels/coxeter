@@ -1,5 +1,8 @@
 # coxeter
-This is a Python script to generate pictures of regular hyperbolic tilings, using also source images.
+
+This is a Python script to generate pictures of regular (and a few uniform) hyperbolic tilings, using also source images.
+
+## Installation
 
 Install with
 
@@ -7,7 +10,13 @@ Install with
 python setup.py develop
 ```
 
-You might need to run that as superuser.
+You might need to run that as superuser. You might also need to install Cython; if it complains just do
+
+```
+pip install cython
+```
+
+## Usage
 
 Regular tilings are indexed by naturals (p,q). p is the number of sides of the regular polygons, and q is the number of polygons per vertex. For the tiling to be hyperbolic, it must be that (p-2)*(q-2) - 4 > 0. If the LHS is < 0, it's a spherical tiling (i.e. a platonic solid) and if it's 0 then it's a tiling of the Euclidean plane. So, take (p,q) such that the tiling is hyperbolic, for example, p=6, q=4. Then
 
