@@ -268,9 +268,9 @@ def main(
             outflag = False # detect out of disk
             parity = 0      # count transformation parity
 
-            if abs2( z - pivot_vertex ) < 0.001:
-                    outflag = True
-                    continue
+            #if abs2( z - pivot_vertex ) < 0.001:
+            #        outflag = True
+            #        continue
 
             for it in range(max_iterations_int): 
 
