@@ -29,6 +29,8 @@ cdef extern from "complex.h":
     float creal(complex)
 cdef extern from "complex.h":
     float cimag(complex)
+cdef extern from "complex.h":
+    complex conj(complex)
 
 cdef float abs2(complex w):
     return creal(w)*creal(w) + cimag(w)*cimag(w)
@@ -201,6 +203,10 @@ def main(
     cdef int max_iterations_int = max_iterations
     cdef int it
 
+    cdef bint endflag, outflag
+    cdef int parity = 0      # count transformation parity
+
+
 
     for xl in tqdm.trange(COLUMNS):
         for yl in range(LINES):
@@ -219,7 +225,7 @@ def main(
             z += 0.0001*(random.random()+1j) # <- fix boundary errors
 
             # exclude if outside the disk
-            if (z.real*z.real + z.imag*z.imag  > 1): # optimization: explicit abs2 instead of calling
+            if abs2(z) > 1.0:
                 continue
 
             #mobius
@@ -248,7 +254,7 @@ def main(
                     break
 
                 # flip
-                z = z.conjugate()
+                z = conj(z)
                 if (not polygon):
                     parity += 1
     
@@ -261,11 +267,10 @@ def main(
 
                 w = z - local_centre
                 # w = w * r2 / abs2(w)
-                w = r2 / w.conjugate() # optimization
+                w = r2 / conj(w) # optimization
                 nz = local_centre + w
                 
-                #if (abs2(nz) < abs2(z)):
-                if (nz.real*nz.real + nz.imag*nz.imag < z.real*z.real + z.imag*z.imag): # again optimization
+                if (abs2(nz) < abs2(z)):
                     z = nz    
                     parity += 1
 
