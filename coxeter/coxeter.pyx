@@ -25,8 +25,14 @@ def HTMLColorToRGB(colorstring):
 
 
 # geom functions
-def abs2(w):
-    return w.real*w.real + w.imag*w.imag
+cdef extern from "complex.h":
+    float creal(complex)
+cdef extern from "complex.h":
+    float cimag(complex)
+
+cdef float abs2(complex w):
+    return creal(w)*creal(w) + cimag(w)*cimag(w)
+
 
 
 #bilinear sampling
@@ -43,6 +49,32 @@ def bilinear(im, x, y):
     left = lerp(im[x1, y1], im[x1, y2], y)
     right = lerp(im[x2, y1], im[x2, y2], y)
     return lerp(left, right, x)
+
+
+# precalc defs
+
+cdef complex rot2pip
+cdef float tanpip
+cdef complex centre,rotator
+cdef doubletanpip,curtanpip
+cdef float r2
+
+cdef bint alternating
+
+# fundamental region
+
+cdef bint in_fund(complex zz):
+    global alternating, doubletanpip, tanpip, rot2pip, r2, centre
+    if alternating:
+        return (
+            (cimag(zz) >=0) and
+            (cimag(zz) < doubletanpip * creal(zz)) and
+            ((abs2(zz-centre) > r2) and ( abs2(zz - centre*rot2pip)> r2)))
+    else:
+        return (
+            (zz.imag >= 0) and
+            (zz.imag < tanpip * zz.real) and
+            (abs2(zz - centre) > r2 ))
 
 
 def main(
@@ -62,7 +94,7 @@ def main(
         truncate_uniform,
         truncate_complete,
         colours):
-
+    global alternating, doubletanpip, tanpip, rot2pip, r2, centre
 
     if q < 0:#infinity
         q = 2**10
@@ -116,9 +148,9 @@ def main(
 
 
     # precalc
-
     rot2pip = exp(1j*2*pi/float(p))
     tanpip = tan(pi/float(p))
+
 
     if (not alternating):
         rotator = rot2pip
@@ -140,19 +172,7 @@ def main(
     if truncate_complete:
         rprime2 = abs2( centre_truncation_uniform - (d-r) )
 
-    # fundamental region
 
-    def in_fund(z):
-        if alternating:
-            return (
-                (z.imag >=0) and
-                (z.imag < doubletanpip * z.real) and
-                ((abs2(z-centre) > r2) and ( abs2(z - centre*rot2pip)> r2)))
-        else:
-            return (
-                (z.imag >= 0) and
-                (z.imag < tanpip * z.real) and
-                (abs2(z - centre) > r2 ))
 
     # template
 
@@ -161,8 +181,8 @@ def main(
         templimg_pixels = templimg.load()
         for i in range(size_original):
             for j in range(size_original):
-                z = (i + 1j*j)/(float(size_original))*input_sector
-                if in_fund(z):
+                zz = (i + 1j*j)/(float(size_original))*input_sector
+                if in_fund(zz):
                     templimg_pixels[i,j] = (0,0,0,255)
         return templimg
 
@@ -173,17 +193,26 @@ def main(
 
     # render loop
 
-    for x in tqdm.trange(shape[0]):
-        for y in range(shape[1]):
+    cdef int COLUMNS = shape[0]
+    cdef int LINES = shape[1]
+    cdef int xl,yl
+    cdef complex z
+
+    cdef int max_iterations_int = max_iterations
+    cdef int it
+
+
+    for xl in tqdm.trange(COLUMNS):
+        for yl in range(LINES):
             if (half_plane):
-                X = 2*float(x)/shape[0]        
-                Y = 2*float(shape[1]-y)/shape[1]  
+                X = 2*float(xl)/shape[0]        
+                Y = 2*float(shape[1]-yl)/shape[1]  
                 w = complex(X,Y)
                 z = (w-1j)/(-1j*w + 1)
             else:
                 # should allow for arbitrary affine maps
-                X = (2*float(x)/shape[0]-1. ) 
-                Y = (2*float(y)/shape[1]-1. )
+                X = (2*float(xl)/shape[0]-1. ) 
+                Y = (2*float(yl)/shape[1]-1. )
                 z = translate + complex(X,Y) * zoom
 
 
@@ -201,7 +230,8 @@ def main(
             outflag = False # detect out of disk
             parity = 0      # count transformation parity
 
-            for it in range(max_iterations): 
+
+            for it in range(max_iterations_int): 
 
                 # rotate z into fundamental wedge
                 emergency = 0
@@ -275,7 +305,7 @@ def main(
             if (outflag):
                 c = (255,0,255,255) # out of circle
 
-            out_pixels[x,y] = c
+            out_pixels[xl,yl] = c
 
     if (oversampling > 1):
         out = out.resize((size_original, size_original), Image.LANCZOS)

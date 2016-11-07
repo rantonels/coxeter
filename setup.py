@@ -1,10 +1,11 @@
 from setuptools import setup, find_packages
-
+from Cython.Build import cythonize
 
 setup(
     name='coxeter',
     version='0.1',
     py_modules=find_packages(),
+    ext_modules = cythonize("coxeter/coxeter.pyx"),
     install_requires=[
         'click',
         'pillow',
