@@ -31,6 +31,8 @@ cdef extern from "complex.h":
     float cimag(complex)
 cdef extern from "complex.h":
     complex conj(complex)
+cdef extern from "math.h":
+    float tanh(float)
 
 cdef float abs2(complex w):
     return creal(w)*creal(w) + cimag(w)*cimag(w)
@@ -114,11 +116,13 @@ def main(
         template                = False,
         truncate_uniform        = False,
         truncate_complete       = False,
-        colours                 = []):
+        colours                 = [],
+        equidistant             = False):
     global do_alternating, doubletanpip, tanpip, rot2pip, r2, centre, r, d
 
     cdef bint do_flip = flip
     do_alternating = alternating
+    cdef bint do_equidistant = equidistant
 
     if q < 0:#infinity
         q = 2**10
@@ -255,6 +259,11 @@ def main(
 
 
             z += 0.0001*(random.random()+1j) # <- fix boundary errors
+
+            if do_equidistant:
+                # equidistant azimuthal
+                norm = tanh(abs(z)/2)
+                z = z / abs(z) * norm
 
             # exclude if outside the disk
             if abs2(z) > 1.0:
