@@ -2,6 +2,7 @@ import tqdm
 from PIL import Image
 from math import sin, cos, tan, sqrt, floor, pi
 from cmath import exp
+from mpmath import ellipfun
 
 import random
 import exceptions
@@ -33,6 +34,12 @@ cdef extern from "complex.h":
     complex conj(complex)
 cdef extern from "math.h":
     float tanh(float)
+cdef extern from "complex.h":
+    complex asin(complex)
+cdef extern from "complex.h":
+    complex csin(complex)
+cdef extern from "complex.h":
+    complex ccos(complex)
 
 cdef float abs2(complex w):
     return creal(w)*creal(w) + cimag(w)*cimag(w)
@@ -44,6 +51,62 @@ cdef float signum(float x):
     return (x>0) - (x<0)
 cdef float rabs (float x):
     return x * signum(x)
+
+
+# jacobi elliptic function
+cdef int JACOBI_ITERATIONS = 7
+temp_covera_list = []
+a = 1.0
+b = 1.0/sqrt(2)
+c = 1.0/sqrt(2)
+for i in range(JACOBI_ITERATIONS + 1):
+    temp_covera_list.append(c/a)
+    ta,tb,tc = 0.5 * (a+b) , sqrt(a*b) , 0.5*(a-b)
+    a,b,c = ta,tb,tc
+
+
+temp_covera = temp_covera_list
+cdef float a_n = a
+
+
+cdef complex jacobi_cn_opt(complex w): #doesn't work well for Im(w) =/= 0 ???
+    global temp_covera,a_n
+
+    cdef complex phi_amplitude = (2**JACOBI_ITERATIONS) * a_n * w
+    for i in range(JACOBI_ITERATIONS):
+        print phi_amplitude
+        phi_amplitude = 0.5*(phi_amplitude + asin( temp_covera[ JACOBI_ITERATIONS-i] * csin(phi_amplitude) ) )
+
+    return ccos(phi_amplitude)
+
+cdef float sqrt2 = sqrt(2)
+cdef complex jacobi_cn(w):
+    if (creal(w) < -K_e):
+        return -(jacobi_cn((-2*K_e - w)))
+
+    if ( cimag(w) > creal(w) + K_e):
+        return  1j * (jacobi_cn( -K_e + (-1j)*(w + K_e) ) )
+    if (cimag(w) < - creal(w) - K_e):
+        return  -1j * (jacobi_cn( -K_e + (1j)*(w + K_e) ) )
+
+    #pade approximant 8,8
+    cdef complex w2,w4,w6,w8,t2,t4,t6,t8
+
+    w2 = w*w
+    w4 = w2*w2
+    w6 = w4*w2
+    w8 = w4*w4
+
+    t2 = w2/4.
+    t4 = w4/120.
+    t6 = w6/960.
+    t8 = w8/249600.
+
+    return (1.0 - t2 - t4 - t6 + t8) / (1.0 + t2 - t4 + t6 + t8)
+
+
+cdef float K_e = 1.85407467730137191843385034719526004621759 # enough digits for you?
+
 
 
 #bilinear sampling
@@ -104,7 +167,6 @@ def main(
         q,
         size_original,
         input_image,
-        half_plane,
         mobius,
         polygon,
         max_iterations,
@@ -117,12 +179,15 @@ def main(
         truncate_uniform        = False,
         truncate_complete       = False,
         colours                 = [],
-        equidistant             = False):
+        half_plane              = False,
+        equidistant             = False,
+        squircle                = False):
     global do_alternating, doubletanpip, tanpip, rot2pip, r2, centre, r, d
 
     cdef bint do_flip = flip
     do_alternating = alternating
     cdef bint do_equidistant = equidistant
+    cdef bint do_squircle = squircle
 
     if q < 0:#infinity
         q = 2**10
@@ -264,6 +329,12 @@ def main(
                 # equidistant azimuthal
                 norm = tanh(abs(z)/2)
                 z = z / abs(z) * norm
+
+            if do_squircle:
+#                z = (1-1j)/sqrt2 * jacobi_cn(K_e * ( (1+1j)/2.0 * z - 1) )
+                 if (rabs(creal(z)) > 1) or (rabs(cimag(z)) > 1):
+                     continue
+                 z = jacobi_cn( K_e * ((1+1j)/2.0 * z - 1))
 
             # exclude if outside the disk
             if abs2(z) > 1.0:

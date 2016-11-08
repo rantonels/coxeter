@@ -10,6 +10,7 @@ from PIL import Image
 @click.option("-i", "--input_file_name", type=click.Path(), default=None)
 @click.option("-h", "--half_plane", is_flag=True)
 @click.option("--equidistant", is_flag=True)
+@click.option("--squircle", is_flag=True)
 @click.option("-m", "--mobius", type=float, default=0)
 @click.option("--polygon", is_flag=True)
 @click.option("--max_iterations", type=int, default=14)
@@ -34,6 +35,7 @@ def main(
         input_file_name,
         half_plane,
         equidistant,
+        squircle,
         mobius,
         polygon,
         max_iterations,
@@ -61,7 +63,6 @@ def main(
         q,
         size,
         input_image,
-        half_plane,
         mobius,
         polygon,
         max_iterations,
@@ -80,7 +81,9 @@ def main(
             colour_truncation,
             colour_divergent
         ),
-        equidistant = equidistant
+        half_plane  = half_plane,
+        equidistant = equidistant,
+        squircle    = squircle
     )
     out.save(output_file_name)
 
