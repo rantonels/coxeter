@@ -34,6 +34,8 @@ python coxeter.py -p 6 -q 4 -s 500 --polygon hexagons.png
 
 this will colour hexagons in an alternating fashion. Obviously, this is only available if q is even.
 
+A way to visualize the polygons for any p and q is to draw the edges. Setting `--borders WIDTH` will draw borders whose thickness is a fraction WIDTH of the polygon size.
+
 Depending on p,q, and the resolution some parts of the image will appear blue, these are pixels which haven't converged in the maximum number of iterations allowed. In that case, the number of iterations can be increased with `--max_iterations ITERS` (default 14).
 
 The picture will often come out noisy or pixelated because of aliasing. This is normal. You can render it at a higher resolution and then resample it down with the `--multisampling` option. For example:
@@ -55,6 +57,7 @@ Command | Colour
 `--colour_secundary` | second tile colour
 `--colour_divergent` | colour for non-converging pixels (defaults to bright blue)
 `--colour_truncation` | colour of polygons resulting from a truncation
+`--colour_borders` | colour of borders when using `--border`
 
 ### Other models
 

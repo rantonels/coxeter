@@ -21,12 +21,14 @@ from PIL import Image
 @click.option("--oversampling", type=int, default=1)
 @click.option("--truncate_uniform",is_flag=True)
 @click.option("--truncate_complete",is_flag=True)
+@click.option("--borders", type=float, default=-1.0)
 @click.option("--template",is_flag=True)
 @click.option("--colour_bg",        default = "#FFFFFF")
 @click.option("--colour_primary",   default = "#000000")
 @click.option("--colour_secundary", default = "#FF3333")
 @click.option("--colour_truncation",default = "#FFCC00")
 @click.option("--colour_divergent", default = "#0000FF")
+@click.option("--colour_borders",   default = "#00FF00")
 @click.argument("output_file_name", nargs=1, type=click.Path())
 def main(
         p,
@@ -45,6 +47,7 @@ def main(
         alternating,
         oversampling,
         output_file_name,
+        borders,
         template,
         truncate_uniform,
         truncate_complete,
@@ -52,7 +55,8 @@ def main(
         colour_primary,
         colour_secundary,
         colour_truncation,
-        colour_divergent
+        colour_divergent,
+        colour_borders
         ):
     if input_file_name:
         input_image = Image.open(input_file_name).convert("RGB")
@@ -74,12 +78,14 @@ def main(
         template = template,
         truncate_uniform = truncate_uniform,
         truncate_complete = truncate_complete,
+        borders = borders,
         colours = (
             colour_bg,
             colour_primary,
             colour_secundary,
             colour_truncation,
-            colour_divergent
+            colour_divergent,
+            colour_borders
         ),
         half_plane  = half_plane,
         equidistant = equidistant,

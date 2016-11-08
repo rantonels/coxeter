@@ -178,6 +178,7 @@ def main(
         template                = False,
         truncate_uniform        = False,
         truncate_complete       = False,
+        borders                 = -1,
         colours                 = [],
         half_plane              = False,
         equidistant             = False,
@@ -188,6 +189,9 @@ def main(
     do_alternating = alternating
     cdef bint do_equidistant = equidistant
     cdef bint do_squircle = squircle
+    
+    cdef bint do_borders = (borders > 0)
+    cdef float border_width = borders*borders
 
     if q < 0:#infinity
         q = 2**10
@@ -224,7 +228,7 @@ def main(
 
     # Colours parsing
 
-    col_bg, col_primary , col_secundary, col_truncation, col_divergent = map(HTMLColorToRGB, colours)
+    col_bg, col_primary , col_secundary, col_truncation, col_divergent, col_borders = map(HTMLColorToRGB, colours)
 
     # palette = [ (random.randint(0,255),random.randint(0,255),random.randint(0,255),255) for j in range(15) ]
 
@@ -448,6 +452,11 @@ def main(
                         c = col_truncation
                     if truncate_complete and (abs2(z-centre_truncation_uniform) < rprime2):
                         c = col_truncation
+                    
+                    # borders
+                    if do_borders:
+                        if (abs2(z-d) < r2 + border_width):
+                            c = col_borders
 
             else:
                 c = (0,255,0,255) # error?
