@@ -2,7 +2,7 @@ import tqdm
 from PIL import Image
 from math import sin, cos, tan, sqrt, floor, pi
 from cmath import exp
-from mpmath import ellipfun
+#from mpmath import ellipfun
 
 import random
 import exceptions

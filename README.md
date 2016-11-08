@@ -44,7 +44,34 @@ coxeter -p 6 -q 4 -s 500 --multisampling=2 hexagons.png
 
 renders the image at 1000x1000 and then downscales it to 500x500 with Lanczos sampling.
 
-You can also render the image in the half-plane model instead of the Poincaré disk by adding `--half-plane`.
+### Colours
+
+When not using image mode, colours for rendering can be fully customized with the following options
+
+Command | Colour
+--------|--------
+`--colour_bg` | background colour
+`--colour_primary` | first tile colour
+`--colour_secundary` | second tile colour
+`--colour_divergent` | colour for non-converging pixels (defaults to bright blue)
+`--colour_truncation` | colour of polygons resulting from a truncation
+
+### Other models
+
+Other projections of the hyperbolic plane can be used instead of the Poincaré disk.
+
+Projection | Command
+-----------|--------
+Poincaré disk | None
+Half-plane model | `--half_plane` or `-h`
+Square | `--squircle`
+Azimuthal equidistant | `--equidistant`
+
+The first three projections are conformal. The map to the square is implemented through a Schwarz-Christoffel biholomorphism.
+
+The azimuthal equidistant projection is not conformal, but represents radial distances faithfully.
+
+The projections can be better appreciated by zooming in or out with the option `--zoom ZOOM_FACTOR`.
 
 ### Truncation
 
