@@ -3,6 +3,8 @@ from PIL import Image
 from math import sin, cos, tan, sqrt, floor, pi
 from cmath import exp
 #from mpmath import ellipfun
+cimport numpy as np
+import numpy as np
 
 import random
 import exceptions
@@ -110,20 +112,22 @@ cdef float K_e = 1.85407467730137191843385034719526004621759 # enough digits for
 
 
 #bilinear sampling
-def lerp(a, b, coord):
-    if isinstance(a, tuple):
-        return tuple([lerp(c, d, coord) for c,d in zip(a,b)])
-    ratio = coord - floor(coord)
-    return int(round(a * (1.0-ratio) + b * ratio))
+cdef np.ndarray lerp(np.ndarray a, np.ndarray b, float coord):
+    #if isinstance(a, tuple):
+    #    return tuple([lerp(c, d, coord) for c,d in zip(a,b)])
+    cdef float ratio = coord - floor(coord) 
+    cdef np.ndarray out = np.rint(a * (1.0-ratio) + b * ratio).astype(int)
+    return out
 
 
-def bilinear(im, x, y):
+cdef tuple bilinear(np.ndarray im, float y,float x):
+    cdef int x1,y1,x2,y2
     x1, y1 = int(floor(x)), int(floor(y))
     x2, y2 = x1+1, y1+1
-    left = lerp(im[x1, y1], im[x1, y2], y)
-    right = lerp(im[x2, y1], im[x2, y2], y)
-    return lerp(left, right, x)
-
+    cdef np.ndarray left = lerp(im[y1, x1,:], im[y1, x2,:], x)
+    cdef np.ndarray right = lerp(im[y2, x1,:], im[y2, x2,:], x)
+    cdef np.ndarray out = lerp(left, right, y)
+    return (out[0],out[1],out[2],255)
 
 # precalc defs
 
@@ -235,14 +239,14 @@ def main(
     # average input colour
 
     if input_image:
-        inimage_pixels = input_image.load()
+        inimage_pixels = np.array(input_image.getdata(), np.uint8).reshape(input_image.size[1],input_image.size[0],3)
         inW, inH = input_image.size
         ar,ag,ab = 0,0,0
         count = 0
 
         for x in range(inW):
             for y in range(inH):
-                temp = inimage_pixels[x,y]
+                temp = inimage_pixels[y,x]
                 ar+=temp[0]
                 ag+=temp[1]
                 ab+=temp[2]
@@ -286,11 +290,17 @@ def main(
     if (template):
         templimg = Image.new("RGB",(size_original,size_original),"white")
         templimg_pixels = templimg.load()
+        
+        unit = tanh(abs(R)/2) / 8.0
+
         for i in range(size_original):
             for j in range(size_original):
                 zz = (i + 1j*j)/(float(size_original))*input_sector
                 if in_fund(zz):
-                    templimg_pixels[i,j] = (0,0,0,255)
+                    templimg_pixels[i,j] = col_primary
+                    if int(floor(tanh(abs(zz)/2) / unit))%2 == 0:
+                        templimg_pixels[i,j] = col_secundary
+                    
         return templimg
 
     # create main buffer
@@ -311,7 +321,7 @@ def main(
     cdef bint endflag, outflag
     cdef int parity = 0      # count transformation parity
 
-
+    cdef int xx,yy
 
     for xl in tqdm.trange(COLUMNS):
         for yl in range(LINES):
@@ -438,10 +448,11 @@ def main(
             # produce colour
             if (in_fund(z)):
                 if input_image:
-                    xx = int(z.real/input_sector*inW)
-                    yy = int(z.imag/input_sector*inH)
+                    xx = int(z.real/input_sector*inW) % inW
+                    yy = int(z.imag/input_sector*inH) % inH
                     try:
-                        c = bilinear(inimage_pixels,xx,yy)
+                        c =  bilinear(inimage_pixels,yy,xx ) # bilinear(inimage_pixels,xx,yy)
+                        #print c
                     except IndexError:
                         c = average_colour #(0,255,255,255)
                 else:
