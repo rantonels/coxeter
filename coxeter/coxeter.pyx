@@ -76,7 +76,6 @@ cdef complex jacobi_cn_opt(complex w): #doesn't work well for Im(w) =/= 0 ???
 
     cdef complex phi_amplitude = (2**JACOBI_ITERATIONS) * a_n * w
     for i in range(JACOBI_ITERATIONS):
-        print phi_amplitude
         phi_amplitude = 0.5*(phi_amplitude + asin( temp_covera[ JACOBI_ITERATIONS-i] * csin(phi_amplitude) ) )
 
     return ccos(phi_amplitude)
@@ -196,6 +195,7 @@ def main(
     
     cdef bint do_borders = (borders > 0)
     cdef float border_width = borders*borders
+    cdef bint do_mandelbrot = False
 
     if q < 0:#infinity
         q = 2**10
@@ -221,8 +221,6 @@ def main(
     R = sqrt(r*r + d*d - 2*r*d*cos(phiangle)) # circumscribed circle radius
     centers_distance = 2 * (d-r) / (1+(d-r)**2) # distance between centres of adjacent polygons
 
-    print centers_distance, d-r, mobius_translation(d-r,d-r)
-    print rabs(1), rabs(-1)
 
     a = cos(phiangle)*r
     x_input_sector = d-a
@@ -350,6 +348,14 @@ def main(
                      continue
                  z = jacobi_cn( K_e * ((1+1j)/2.0 * z - 1))
 
+            if (do_mandelbrot):
+                #mandelbrot
+                nz = z
+                for k in range(20):
+                    nz = nz*nz + z
+                z = nz
+
+
             # exclude if outside the disk
             if abs2(z) > 1.0:
                 continue
@@ -382,47 +388,45 @@ def main(
 
                 if in_fund(z):
                     break
-
+                
+                # flip
+                z = conj(z)
+                if (not polygon):
+                    parity += 1
+    
+                if in_fund(z):
+                    break
                 
                 if do_flip:
-                    # rotate about apotheme
+                    # Invert, then rotate
 
-                    #nz = rotate_about_apotheme(z,pivot_vertex)
-                    #if abs2(nz) < abs2(z):
-                    #    z = nz
-                    #    parity += 1
+                    # invert wrt centre
+                    w = z - centre
+                    w = r2 / conj(w)
+                    nz = centre + w
 
-                    #nz = rotate_about_apotheme(z,conj(pivot_vertex))
-                    #if abs2(nz) < abs2(z):
-                    #    z = nz
-                    #    parity += 1
+                    #flip horizontally
+                    #nz = - nz.conjugate()
+                    nz *= rot2pip
 
-                    # translate back
-
-                    if(cimag(z) <= 0):
-                        z =  z*rot2pip
+                    if (abs2(nz) < abs2(z)):
+                        z = nz
                         parity += 1
 
-                    if in_fund(z):
-                        break
 
-                    z = mobius_translation(z, - centers_distance)
-                    #if abs2(nz) < abs2(z):
-                    #    z = nz
+                    # Rotate, then invert
 
+                    nz = z * rot2pip
+                    w = nz - centre
+                    w = r2 / conj(w)
+                    nz = centre + w
 
-                    #if (abs2(nz) < abs2(z)):
-                    #    z = nz
-                    parity += 1
+                    if (abs2(nz) < abs2(z)):
+                        z = nz
+                        parity += 1
 
                 else:
-                    # flip
-                    z = conj(z)
-                    if (not polygon):
-                        parity += 1
-        
-                    if in_fund(z):
-                        break
+
 
                     # bring closer
 
@@ -452,7 +456,6 @@ def main(
                     yy = int(z.imag/input_sector*inH) % inH
                     try:
                         c =  bilinear(inimage_pixels,yy,xx ) # bilinear(inimage_pixels,xx,yy)
-                        #print c
                     except IndexError:
                         c = average_colour #(0,255,255,255)
                 else:
