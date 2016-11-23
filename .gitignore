@@ -2,6 +2,7 @@
 *.jpg
 *.png
 *.gif
+*.xcf
 # vim
 *.swp
 *.swo

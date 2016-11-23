@@ -17,7 +17,9 @@ from PIL import Image
 @click.option("-z", "--zoom", type=float, default=1.01)
 @click.option("-t", "--translate", type=complex, default=0 + 0j)
 @click.option("-f", "--flip", is_flag=True)
-@click.option("-a", "--alternating", is_flag=True)
+@click.option("--doubled", is_flag=True)
+@click.option("--quadrupled", is_flag=True)
+@click.option("--alternating", is_flag=True)
 @click.option("--oversampling", type=int, default=1)
 @click.option("--truncate_uniform",is_flag=True)
 @click.option("--truncate_complete",is_flag=True)
@@ -44,6 +46,8 @@ def main(
         zoom,
         translate,
         flip,
+        doubled,
+        quadrupled,
         alternating,
         oversampling,
         output_file_name,
@@ -73,6 +77,8 @@ def main(
         zoom,
         translate = translate,
         flip = flip,
+        doubled = doubled,
+        quadrupled = quadrupled,
         alternating = alternating,
         oversampling = oversampling,
         template = template,

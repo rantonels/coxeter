@@ -136,13 +136,19 @@ cdef complex centre,rotator, pivot_vertex, vertex_rotator
 cdef doubletanpip,curtanpip
 cdef float r2,r,d
 
-cdef bint do_alternating
+
+
+cdef bint do_double
+
+cdef enum DoubleModeType:
+    DoubleAlternating,DoubleRotate
+
 
 # fundamental region
 
 cdef bint in_fund(complex zz):
-    global do_alternating, doubletanpip, tanpip, rot2pip, r2, centre
-    if do_alternating:
+    global do_double, doubletanpip, tanpip, rot2pip, r2, centre
+    if do_double:
         return (
             (cimag(zz) >=0) and
             (cimag(zz) < doubletanpip * creal(zz)) and
@@ -176,6 +182,8 @@ def main(
         zoom,
         translate               = 0,
         flip                    = False,
+        doubled                 = False,
+        quadrupled              = False,
         alternating             = False,
         oversampling            = None,
         template                = False,
@@ -186,16 +194,28 @@ def main(
         half_plane              = False,
         equidistant             = False,
         squircle                = False):
-    global do_alternating, doubletanpip, tanpip, rot2pip, r2, centre, r, d
+    global do_double, doubletanpip, tanpip, rot2pip, r2, centre, r, d
 
     cdef bint do_flip = flip
-    do_alternating = alternating
+    do_double = doubled
+
+    cdef bint do_quadruple = quadrupled
+
+    if (do_quadruple):
+        do_double = True
+
     cdef bint do_equidistant = equidistant
     cdef bint do_squircle = squircle
     
     cdef bint do_borders = (borders > 0)
     cdef float border_width = borders*borders
     cdef bint do_mandelbrot = False
+
+    cdef DoubleModeType double_mode = DoubleRotate
+
+    if (alternating):
+        double_mode = DoubleAlternating
+
 
     if q < 0:#infinity
         q = 2**10
@@ -204,7 +224,7 @@ def main(
         raise exceptions.NotHyperbolicError(
             "(p - 2) * (q - 2) < 4: tessellation is not hyperbolic")
 
-    if (do_alternating and p % 2):
+    if ((double_mode==DoubleAlternating) and p % 2):
         raise exceptions.AlternatingModeError(
             "alternating mode cannot be used with odd p.")
 
@@ -225,7 +245,7 @@ def main(
     a = cos(phiangle)*r
     x_input_sector = d-a
     y_input_sector = sin(phiangle)*r
-    input_sector = max(x_input_sector, y_input_sector)
+    cdef float input_sector = max(x_input_sector, y_input_sector)
 
 
     # Colours parsing
@@ -258,7 +278,7 @@ def main(
     tanpip = tan(pi/float(p))
 
 
-    if (not do_alternating):
+    if (not do_double):
         rotator = rot2pip
         curtanpip = tanpip
     else:
@@ -390,14 +410,27 @@ def main(
                     break
                 
                 # flip
-                z = conj(z)
-                if (not polygon):
-                    parity += 1
-    
+
+                if (not do_double) or (double_mode == DoubleAlternating):
+                    z = conj(z)
+                    if (not polygon):
+                        parity += 1
+                else:
+                    # Double and rotating
+                    if cimag(z) > 0:
+                        z/= rot2pip
+                        parity+=1
+                    else:
+                        z*= rot2pip
+                        parity+=1
+
+
                 if in_fund(z):
                     break
                 
                 if do_flip:
+                    #flipper = rot2pip if (double_mode == DoubleAlternating) else -1
+
                     # Invert, then rotate
 
                     # invert wrt centre
@@ -405,9 +438,10 @@ def main(
                     w = r2 / conj(w)
                     nz = centre + w
 
-                    #flip horizontally
-                    #nz = - nz.conjugate()
-                    nz *= rot2pip
+                    if double_mode == DoubleAlternating:
+                        nz *= rot2pip
+                    else:
+                        nz = conj(nz)
 
                     if (abs2(nz) < abs2(z)):
                         z = nz
@@ -416,7 +450,12 @@ def main(
 
                     # Rotate, then invert
 
-                    nz = z * rot2pip
+                    if double_mode == DoubleAlternating:
+                        nz = rot2pip * z
+                    else:
+                        nz = conj(z)
+
+
                     w = nz - centre
                     w = r2 / conj(w)
                     nz = centre + w
@@ -432,7 +471,7 @@ def main(
 
                     # invert
 
-                    local_centre = centre if ((not do_alternating) or (rabs(z.imag) < tanpip * z.real)) else rot_centre
+                    local_centre = centre if ((not do_double) or (rabs(z.imag) < tanpip * z.real)) else rot_centre
 
                     w = z - local_centre
                     # w = w * r2 / abs2(w)
@@ -452,8 +491,19 @@ def main(
             # produce colour
             if (in_fund(z)):
                 if input_image:
+                    # C -> image_space
+
                     xx = int(z.real/input_sector*inW) % inW
-                    yy = int(z.imag/input_sector*inH) % inH
+                    if (not do_quadruple):
+                        yy = int(z.imag/input_sector*inH) % inH
+                    else:
+                        yyt = (z.imag/input_sector)*(inH/2.0)
+                        if (parity%2 == 1):
+                            yyt = - yyt
+                        yyt += inH/2.0
+                        yy = int(yyt)
+                    
+
                     try:
                         c =  bilinear(inimage_pixels,yy,xx ) # bilinear(inimage_pixels,xx,yy)
                     except IndexError:
