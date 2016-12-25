@@ -11,6 +11,7 @@ from PIL import Image
 @click.option("-h", "--half_plane", is_flag=True)
 @click.option("--equidistant", is_flag=True)
 @click.option("--squircle", is_flag=True)
+@click.option("--band",is_flag=True)
 @click.option("-m", "--mobius", type=float, default=0)
 @click.option("--polygon", is_flag=True)
 @click.option("--max_iterations", type=int, default=14)
@@ -40,6 +41,7 @@ def main(
         half_plane,
         equidistant,
         squircle,
+        band,
         mobius,
         polygon,
         max_iterations,
@@ -95,7 +97,8 @@ def main(
         ),
         half_plane  = half_plane,
         equidistant = equidistant,
-        squircle    = squircle
+        squircle    = squircle,
+        band        = band
     )
     out.save(output_file_name)
 

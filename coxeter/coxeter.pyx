@@ -42,6 +42,8 @@ cdef extern from "complex.h":
     complex csin(complex)
 cdef extern from "complex.h":
     complex ccos(complex)
+cdef extern from "complex.h":
+    complex ctanh(complex)
 
 cdef float abs2(complex w):
     return creal(w)*creal(w) + cimag(w)*cimag(w)
@@ -193,7 +195,8 @@ def main(
         colours                 = [],
         half_plane              = False,
         equidistant             = False,
-        squircle                = False):
+        squircle                = False,
+        band                    = False):
     global do_double, doubletanpip, tanpip, rot2pip, r2, centre, r, d
 
     cdef bint do_flip = flip
@@ -206,6 +209,7 @@ def main(
 
     cdef bint do_equidistant = equidistant
     cdef bint do_squircle = squircle
+    cdef bint do_band = band
     
     cdef bint do_borders = (borders > 0)
     cdef float border_width = borders*borders
@@ -374,6 +378,10 @@ def main(
                 for k in range(20):
                     nz = nz*nz + z
                 z = nz
+            
+            if do_band:
+                #z = (2/np.pi) * np.arctanh(z)
+                z = ctanh(z*pi/4.0)
 
 
             # exclude if outside the disk
