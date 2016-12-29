@@ -69,9 +69,10 @@ Poincaré disk | None
 Half-plane model | `--half_plane` or `-h`
 Square | `--squircle`
 Band | `--band`
+Hole | `--hole`
 Azimuthal equidistant | `--equidistant`
 
-The first four projections are conformal. The map to the square is implemented through a Schwarz-Christoffel biholomorphism.
+All projections except the last are conformal. The map to the square is implemented through a Schwarz-Christoffel biholomorphism.
 
 The azimuthal equidistant projection is not conformal, but represents radial distances faithfully.
 

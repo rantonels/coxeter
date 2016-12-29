@@ -196,7 +196,8 @@ def main(
         half_plane              = False,
         equidistant             = False,
         squircle                = False,
-        band                    = False):
+        band                    = False,
+        hole                    = False):
     global do_double, doubletanpip, tanpip, rot2pip, r2, centre, r, d
 
     cdef bint do_flip = flip
@@ -209,6 +210,7 @@ def main(
 
     cdef bint do_equidistant = equidistant
     cdef bint do_squircle = squircle
+    cdef bint do_hole = hole
     cdef bint do_band = band
     
     cdef bint do_borders = (borders > 0)
@@ -378,6 +380,9 @@ def main(
                 for k in range(20):
                     nz = nz*nz + z
                 z = nz
+
+            if do_hole: #do hole
+                z = 1/z
             
             if do_band:
                 #z = (2/np.pi) * np.arctanh(z)
